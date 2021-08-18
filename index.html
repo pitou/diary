@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Diary</title>
+    <meta name="description" content="" />
+
+    <script type="application/json" id="json"></script>
+
+    <script src="dist/bundle.js"></script>
+
+    <style>
+      body {
+        background-color: #f1f1f1;
+        padding: 50px;
+        line-height: 50%;
+        font-family: Helvetica sans-serif;
+        display: flex;
+        justify-content: center;
+      }
+
+      .main {
+        width: 1000px;
+      }
+
+      .main, .chart {
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+  </head>
+
+  <body onload="bundle.processData()">
+    <div class="main">
+      <div id="info" class="info"></div>
+      <div id="chart" class="chart"></div>
+    </div>
+  </body>
+</html>

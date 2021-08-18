@@ -1,0 +1,39 @@
+{
+  "name": "diary",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "npm-run-all --parallel serve watch",
+    "serve": "live-server --port=8000 --watch=dist --no-browser",
+    "watch": "node_modules/.bin/rollup -w -c",
+    "build": "node_modules/.bin/rollup -c"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^19.0.2",
+    "@rollup/plugin-node-resolve": "^13.0.4",
+    "@types/d3-shape": "^3.0.2",
+    "eslint": "^7.31.0",
+    "live-server": "^1.2.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.3.2",
+    "rollup": "^2.55.1",
+    "rollup-plugin-inject-process-env": "^1.3.1",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-terser": "^7.0.2"
+  },
+  "dependencies": {
+    "d3": "^7.0.0",
+    "d3-shape": "^3.0.1",
+    "dayjs": "^1.10.6",
+    "jsdom": "^16.6.0",
+    "json-format-highlight": "^1.0.4",
+    "lodash-es": "^4.17.21",
+    "node-fetch": "^2.6.1",
+    "papaparse": "^5.3.1",
+    "query-string": "^7.0.1",
+    "rollup-plugin-static-files": "^0.2.0"
+  }
+}
