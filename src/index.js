@@ -2,8 +2,12 @@ import { parse } from 'papaparse'
 import * as d3 from 'd3'
 import { random } from 'lodash-es'
 
+import { getRoundedRectPath } from './rect'
+
 const PAPER_PAGE_W = 14
 const PAPER_PAGE_H = 20.5
+
+const PAGE_BORDER_MAX_RADIUS = 5
 
 const pageWidth = 40
 const pageHeight = (pageWidth * PAPER_PAGE_H) / PAPER_PAGE_W
@@ -11,27 +15,35 @@ const pageHeightPlusGap = pageHeight + 40
 
 const pageScale = d3.scaleLinear().domain([0, PAPER_PAGE_H]).range([0, pageHeight])
 
-const rows = 16
-const cols = 10
+const cols = 8
 
-const svgWidth = cols * 70
-const svgHeight = rows * pageHeightPlusGap + 100
+const svgWidth = 910
 
 const GAP = 6
 
-const drawPageBlock = (page, y, height) => {
-  page
-    .append('rect')
-    .attr('x', 0)
-    .attr('y', y)
-    .attr('width', pageWidth)
-    .attr('height', height || GAP)
-    .attr('stroke', height > 0 ? '#b4b4b4' : 'transparent')
-    .attr('fill', height > 0 ? 'transparent' : '#ff3300')
-    .attr('opacity', height > 0 ? 1 : 0.1)
+const drawPageBlock = (page, pageIndex, actualBlocksCount) => {
+  return (height, blockY, blockIndex) => {
+    const radius = height > 0 ? Math.min(height, PAGE_BORDER_MAX_RADIUS) : PAGE_BORDER_MAX_RADIUS
+    const isLeftPage = pageIndex % 2 === 0
+
+    page
+      .append('path')
+      .attr('class', height === 0 ? 'missingPages' : 'pageBlock')
+      .attr('d', (/*d*/) => {
+        let roundedCornersType
+        if (actualBlocksCount === 1 && height > 0) {
+          roundedCornersType = isLeftPage ? 'l' : 'r'
+        } else if (blockIndex === 0) {
+          roundedCornersType = isLeftPage ? 'tl' : 'tr'
+        } else if (blockIndex === actualBlocksCount - 1 && height > 0) {
+          roundedCornersType = isLeftPage ? 'bl' : 'br'
+        }
+        return getRoundedRectPath(roundedCornersType, 0, blockY, pageWidth, height || GAP, radius)
+      })
+  }
 }
 
-const drawLine = (page, y, blockIndex) => {
+const drawLine = (page, y) => {
   const line = page.append('g').attr('transform', `translate(3, ${y})`)
 
   line
@@ -40,37 +52,49 @@ const drawLine = (page, y, blockIndex) => {
     .attr('y1', 0)
     .attr('x2', pageWidth - random(6, 16))
     .attr('y2', 0)
-    .attr('stroke', blockIndex % 2 === 0 ? '#595959' : '#595959')
+    .attr('stroke', '#595959')
     .attr('stroke-width', 0.5)
 }
 
-const drawLines = (page, height, blockY, blockIndex) => {
+const drawLines = (page, height, blockY) => {
   const h = height / 2
   const t = h / 2
-  const linesY = t - t / 2 < 4 ? [t, h + t] : [t / 2, t, h - t / 2, h + t / 2, h + t, h + t + t / 2]
-
-  drawLine(page, blockY + h, blockIndex)
-
-  if (t >= 3) {
-    linesY.forEach((y) => {
-      drawLine(page, blockY + y, blockIndex)
-    })
+  let linesY = height >= 6 ? [h] : []
+  if (t >= 4) {
+    if (t - t / 2 < 4) {
+      linesY = [t, h + t, h]
+    } else {
+      linesY = [t / 2, t, h - t / 2, h, h + t / 2, h + t, h + t + t / 2]
+    }
   }
+
+  linesY.forEach((y) => {
+    drawLine(page, blockY + y)
+  })
 }
 
 const drawPageNum = (page, i) => {
   page
     .append('text')
     .attr('x', i % 2 === 0 ? pageWidth - 13 + (i < 10 ? 5 : 0) : 2)
-    .attr('y', pageHeight + 16)
+    .attr('y', pageHeight + 14)
     .attr('fill', '#565656')
     .attr('font-family', 'Helvetica')
-    .attr('font-size', 10)
+    .attr('font-size', 7)
     .text(i + 1)
 }
 
 const showPages = (data) => {
-  const dataSample = data.data.slice(1).map((d) => d.slice(2)) //.slice(0, 11)
+  const dataSample = data.data.slice(1).map((dd) =>
+    dd.slice(2).reduce((acc, val, dayIndex) => {
+      if (val !== null) {
+        acc.push({ val, dayIndex })
+      }
+      return acc
+    }, [])
+  )
+
+  const svgHeight = (dataSample.length / cols) * pageHeightPlusGap * 2.05
 
   const svg = d3.select('#chart').append('svg').attr('width', svgWidth).attr('height', svgHeight)
 
@@ -82,34 +106,42 @@ const showPages = (data) => {
     .attr('height', svgHeight)
     .attr('fill', '#ffffff')
 
-  const group = svg.append('g').attr('transform', `translate(50 50)`)
+  const group = svg.append('g').attr('transform', `translate(50 50) scale(2)`)
 
-  dataSample.forEach((dd, i) => {
-    const filteredD = dd.filter((d) => d !== null)
+  dataSample.forEach((blocks, pageIndex) => {
     // console.log(i, filteredD.join(', '))
 
-    const blockX = (i % cols) * 50 + ((i % cols) % 2 === 0 ? 10 : GAP)
+    const blockX = (pageIndex % cols) * 50 + ((pageIndex % cols) % 2 === 0 ? 10 : GAP)
     let blockY = 0
-    const yCoord = Math.floor(i / cols)
-    let blockIndex = 0
+    const yCoord = Math.floor(pageIndex / cols)
+    // let globalBlockIndex = 0
+    let actualBlockIndex = 0
 
     const page = group
       .append('g')
       .attr('transform', `translate(${blockX} ${pageHeightPlusGap * yCoord})`)
 
-    filteredD.forEach((d, j) => {
-      const height = d > 0 ? pageScale(d) - GAP / 2 : 0
-      blockY += j > 0 ? pageScale(filteredD[j - 1]) : GAP
+    const blocksUpdated = blocks.map((b) => ({
+      ...b,
+      height: b.val > 0 ? pageScale(b.val) - GAP / 2 : 0,
+    }))
+    const actualBlocksCount = blocksUpdated.filter((b) => b.height > 0).length
 
-      drawPageBlock(page, blockY, height)
+    const _drawPageBlock = drawPageBlock(page, pageIndex, actualBlocksCount)
+
+    blocksUpdated.forEach(({ height, dayIndex }, blockIndex) => {
+      blockY += blockIndex > 0 ? pageScale(blocks[blockIndex - 1].val) : GAP
+
+      _drawPageBlock(height, blockY, actualBlockIndex)
 
       if (height > 0) {
-        blockIndex++
-        drawLines(page, height, blockY, blockIndex)
+        drawLines(page, height, blockY)
+        // globalBlockIndex++
+        actualBlockIndex++
       }
     })
 
-    drawPageNum(page, i)
+    drawPageNum(page, pageIndex)
   })
 }
 
