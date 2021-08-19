@@ -6,7 +6,7 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Diary</title>
+    <title>One way to visualize a diary.</title>
     <meta name="description" content="" />
 
     <script type="application/json" id="json"></script>
@@ -14,6 +14,10 @@
     <script src="dist/bundle.js"></script>
 
     <style>
+      html, body {
+        height: 100%;
+      }
+
       body {
         background-color: #f1f1f1;
         padding: 50px;
@@ -25,11 +29,19 @@
 
       .main {
         width: 910px;
+        min-height: 100%;
+        background-color: #ffffff;
       }
 
-      .main, .chart {
+      .main, #chart {
         display: flex;
         flex-direction: column;
+      }
+
+      #title {
+        font-size: 44px;
+        padding: 60px 0 50px 65px;
+        color: #565656;
       }
 
       .pageBlock {
@@ -48,8 +60,10 @@
 
   <body onload="bundle.processData()">
     <div class="main">
-      <div id="info" class="info"></div>
-      <div id="chart" class="chart"></div>
+
+      <div id="chart">
+        <div id="title">One way to visualize a diary.</div>
+      </div>
     </div>
   </body>
 </html>
