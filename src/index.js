@@ -2,7 +2,7 @@ import { parse } from 'papaparse'
 import * as d3 from 'd3'
 import { random } from 'lodash-es'
 
-import { getRoundedRectPath } from './rect'
+import { getRoundedRectPath, getContinuationLine } from './page'
 
 const PAPER_PAGE_W = 14
 const PAPER_PAGE_H = 20.5
@@ -15,6 +15,8 @@ const pageHeightPlusGap = pageHeight + 40
 
 const pageScale = d3.scaleLinear().domain([0, PAPER_PAGE_H]).range([0, pageHeight])
 
+const blockWidth = pageWidth
+
 const cols = 8
 
 const svgWidth = 910
@@ -22,23 +24,48 @@ const svgWidth = 910
 const GAP = 6
 
 const drawPageBlock = (page, isLeftPage, actualBlocksCount) => {
-  return (height, blockY, blockIndex) => {
-    const radius = height > 0 ? Math.min(height, PAGE_BORDER_MAX_RADIUS) : PAGE_BORDER_MAX_RADIUS
+  return (blockHeight, blockY, blockIndex, continuation) => {
+    const radius =
+      blockHeight > 0 ? Math.min(blockHeight, PAGE_BORDER_MAX_RADIUS) : PAGE_BORDER_MAX_RADIUS
+
+    let roundedCornersType
+    if (actualBlocksCount === 1 && blockHeight > 0) {
+      roundedCornersType = isLeftPage ? 'l' : 'r'
+    } else if (blockIndex === 0) {
+      roundedCornersType = isLeftPage ? 'tl' : 'tr'
+    } else if (blockIndex === actualBlocksCount - 1 && blockHeight > 0) {
+      roundedCornersType = isLeftPage ? 'bl' : 'br'
+    }
+
+    const blockX = 0
 
     page
       .append('path')
-      .attr('class', height === 0 ? 'missingPages' : 'pageBlock')
-      .attr('d', (/*d*/) => {
-        let roundedCornersType
-        if (actualBlocksCount === 1 && height > 0) {
-          roundedCornersType = isLeftPage ? 'l' : 'r'
-        } else if (blockIndex === 0) {
-          roundedCornersType = isLeftPage ? 'tl' : 'tr'
-        } else if (blockIndex === actualBlocksCount - 1 && height > 0) {
-          roundedCornersType = isLeftPage ? 'bl' : 'br'
-        }
-        return getRoundedRectPath(roundedCornersType, 0, blockY, pageWidth, height || GAP, radius)
+      .attr('class', blockHeight === 0 ? 'missingPages' : 'pageBlock')
+      .attr(
+        'd',
+        getRoundedRectPath(
+          roundedCornersType,
+          blockX,
+          blockY,
+          blockWidth,
+          blockHeight || GAP,
+          radius,
+          continuation
+        )
+      )
+
+    if (continuation) {
+      const d = getContinuationLine(continuation, {
+        roundedCornersType,
+        blockX,
+        blockY,
+        blockWidth,
+        blockHeight,
+        radius,
       })
+      page.append('path').attr('class', 'pageBlock').attr('d', d).attr('stroke-dasharray', '0 3 3')
+    }
   }
 }
 
@@ -49,7 +76,7 @@ const drawLine = (page, y) => {
     .append('line')
     .attr('x1', 0)
     .attr('y1', 0)
-    .attr('x2', pageWidth - random(6, 16))
+    .attr('x2', blockWidth - random(6, 16))
     .attr('y2', 0)
     .attr('stroke', '#595959')
     .attr('stroke-width', 0.5)
@@ -75,7 +102,7 @@ const drawLines = (page, height, blockY) => {
 const writeMonth = (page, date, year, isLeftPage) => {
   page
     .append('text')
-    .attr('x', isLeftPage ? 4 : 0)
+    .attr('x', isLeftPage ? 4 : 1)
     .attr('y', 0)
     .attr('fill', '#565656')
     .attr('font-family', 'Helvetica')
@@ -84,11 +111,11 @@ const writeMonth = (page, date, year, isLeftPage) => {
     .text(`${date} ${year}`)
 }
 
-const maybeWriteMonth = (page, blocks, lastMonth, isLeftPage) => {
+const maybeWriteMonth = (page, blocks, prevMonth, isLeftPage) => {
   const date = new Date(blocks[0].date)
   const month = date.toLocaleString('default', { month: 'short' })
 
-  if (month !== lastMonth) {
+  if (month !== prevMonth) {
     const year = date.toLocaleString('default', { year: 'numeric' })
     writeMonth(page, month, year, isLeftPage)
   }
@@ -119,8 +146,6 @@ const showPages = ({ data }) => {
     return acc
   }, {})
 
-  console.log(Object.values(dataSample).slice(0, 4))
-
   const svgHeight = (Object.values(dataSample).length / cols) * pageHeightPlusGap * 2.05
 
   const svg = d3.select('#chart').append('svg').attr('width', svgWidth).attr('height', svgHeight)
@@ -135,43 +160,56 @@ const showPages = ({ data }) => {
 
   const group = svg.append('g').attr('transform', `translate(50 50) scale(2)`)
 
-  let lastMonth = ''
+  let prevMonth = ''
 
   Object.values(dataSample).forEach((blocks, pageIndex) => {
-    // console.log(i, filteredD.join(', '))
     const isLeftPage = pageIndex % 2 === 0
 
     const blockX = (pageIndex % cols) * 50 + ((pageIndex % cols) % 2 === 0 ? 10 : GAP)
     let blockY = 0
-    const yCoord = Math.floor(pageIndex / cols)
-    // let globalBlockIndex = 0
     let actualBlockIndex = 0
 
     const page = group
       .append('g')
-      .attr('transform', `translate(${blockX} ${pageHeightPlusGap * yCoord})`)
+      .attr('transform', `translate(${blockX} ${pageHeightPlusGap * Math.floor(pageIndex / cols)})`)
 
     const blocksUpdated = blocks.map((b) => ({
       ...b,
       height: b.val > 0 ? pageScale(b.val) - GAP / 2 : 0,
     }))
-    const actualBlocksCount = blocksUpdated.filter((b) => b.height > 0).length
+    const actualBlocks = blocksUpdated.filter((b) => b.height > 0)
 
-    const _drawPageBlock = drawPageBlock(page, isLeftPage, actualBlocksCount)
+    const prevPage = dataSample[pageIndex - 1]
+    const prevPageLastBlock = prevPage && prevPage[prevPage.length - 1]
+    const { date: prevPageLastDate } = prevPageLastBlock || {}
 
-    blocksUpdated.forEach(({ height }, blockIndex) => {
-      blockY += blockIndex > 0 ? pageScale(blocks[blockIndex - 1].val) : GAP
+    const nextPage = dataSample[pageIndex + 1]
+    const nextPageFirstBlock = nextPage && nextPage[0]
+    const { date: nextPageFirstDate } = nextPageFirstBlock || {}
 
-      _drawPageBlock(height, blockY, actualBlockIndex)
+    const _drawPageBlock = drawPageBlock(page, isLeftPage, actualBlocks.length)
+
+    blocksUpdated.forEach(({ height, date }, blockIndex) => {
+      const { val: prevVal } = blockIndex > 0 ? blocksUpdated[blockIndex - 1] : {}
+      blockY += blockIndex > 0 ? pageScale(prevVal) : GAP
+
+      let continuation = ''
+      if (date === prevPageLastDate) {
+        continuation = date === nextPageFirstDate ? 'both' : 'prev'
+      } else {
+        continuation = date === nextPageFirstDate ? 'next' : ''
+      }
+
+      _drawPageBlock(height, blockY, actualBlockIndex, continuation)
 
       if (height > 0) {
         drawLines(page, height, blockY)
-        // globalBlockIndex++
+
         actualBlockIndex++
       }
     })
 
-    lastMonth = maybeWriteMonth(page, blocks, lastMonth, isLeftPage)
+    prevMonth = maybeWriteMonth(page, blocks, prevMonth, isLeftPage)
 
     writePageNum(page, pageIndex + 1)
   })
