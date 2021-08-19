@@ -21,10 +21,9 @@ const svgWidth = 910
 
 const GAP = 6
 
-const drawPageBlock = (page, pageIndex, actualBlocksCount) => {
+const drawPageBlock = (page, isLeftPage, actualBlocksCount) => {
   return (height, blockY, blockIndex) => {
     const radius = height > 0 ? Math.min(height, PAGE_BORDER_MAX_RADIUS) : PAGE_BORDER_MAX_RADIUS
-    const isLeftPage = pageIndex % 2 === 0
 
     page
       .append('path')
@@ -73,28 +72,56 @@ const drawLines = (page, height, blockY) => {
   })
 }
 
-const drawPageNum = (page, i) => {
+const writeMonth = (page, date, year, isLeftPage) => {
   page
     .append('text')
-    .attr('x', i % 2 === 0 ? pageWidth - 13 + (i < 10 ? 5 : 0) : 2)
+    .attr('x', isLeftPage ? 4 : 0)
+    .attr('y', 0)
+    .attr('fill', '#565656')
+    .attr('font-family', 'Helvetica')
+    .attr('font-size', 6)
+    .attr('font-weight', 'bold')
+    .text(`${date} ${year}`)
+}
+
+const maybeWriteMonth = (page, blocks, lastMonth, isLeftPage) => {
+  const date = new Date(blocks[0].date)
+  const month = date.toLocaleString('default', { month: 'short' })
+
+  if (month !== lastMonth) {
+    const year = date.toLocaleString('default', { year: 'numeric' })
+    writeMonth(page, month, year, isLeftPage)
+  }
+  return month
+}
+
+const writePageNum = (page, pageNum) => {
+  page
+    .append('text')
+    .attr('x', pageNum % 2 === 1 ? pageWidth - 9 + (pageNum < 10 ? 3 : 0) : 2)
     .attr('y', pageHeight + 14)
     .attr('fill', '#565656')
     .attr('font-family', 'Helvetica')
-    .attr('font-size', 7)
-    .text(i + 1)
+    .attr('font-size', 6)
+    .text(pageNum)
 }
 
-const showPages = (data) => {
-  const dataSample = data.data.slice(1).map((dd) =>
-    dd.slice(2).reduce((acc, val, dayIndex) => {
-      if (val !== null) {
-        acc.push({ val, dayIndex })
+const showPages = ({ data }) => {
+  const dataSample = Object.values(data).reduce((acc, dd, dayIndex) => {
+    Object.entries(dd).forEach(([key, val]) => {
+      if (/\d{4}\/\d{2}\/\d{2}/.test(key) && val !== null) {
+        if (!acc[dayIndex]) {
+          acc[dayIndex] = []
+        }
+        acc[dayIndex].push({ date: key, val, dayIndex })
       }
-      return acc
-    }, [])
-  )
+    })
+    return acc
+  }, {})
 
-  const svgHeight = (dataSample.length / cols) * pageHeightPlusGap * 2.05
+  console.log(Object.values(dataSample).slice(0, 4))
+
+  const svgHeight = (Object.values(dataSample).length / cols) * pageHeightPlusGap * 2.05
 
   const svg = d3.select('#chart').append('svg').attr('width', svgWidth).attr('height', svgHeight)
 
@@ -108,8 +135,11 @@ const showPages = (data) => {
 
   const group = svg.append('g').attr('transform', `translate(50 50) scale(2)`)
 
-  dataSample.forEach((blocks, pageIndex) => {
+  let lastMonth = ''
+
+  Object.values(dataSample).forEach((blocks, pageIndex) => {
     // console.log(i, filteredD.join(', '))
+    const isLeftPage = pageIndex % 2 === 0
 
     const blockX = (pageIndex % cols) * 50 + ((pageIndex % cols) % 2 === 0 ? 10 : GAP)
     let blockY = 0
@@ -127,9 +157,9 @@ const showPages = (data) => {
     }))
     const actualBlocksCount = blocksUpdated.filter((b) => b.height > 0).length
 
-    const _drawPageBlock = drawPageBlock(page, pageIndex, actualBlocksCount)
+    const _drawPageBlock = drawPageBlock(page, isLeftPage, actualBlocksCount)
 
-    blocksUpdated.forEach(({ height, dayIndex }, blockIndex) => {
+    blocksUpdated.forEach(({ height }, blockIndex) => {
       blockY += blockIndex > 0 ? pageScale(blocks[blockIndex - 1].val) : GAP
 
       _drawPageBlock(height, blockY, actualBlockIndex)
@@ -141,13 +171,15 @@ const showPages = (data) => {
       }
     })
 
-    drawPageNum(page, pageIndex)
+    lastMonth = maybeWriteMonth(page, blocks, lastMonth, isLeftPage)
+
+    writePageNum(page, pageIndex + 1)
   })
 }
 
 export const processData = async () => {
   parse('http://localhost:8000/public/data.csv', {
-    // header: true,
+    header: true,
     download: true,
     dynamicTyping: true,
     delimiter: ',',
