@@ -95,7 +95,7 @@ const drawLines = (page, height, blockY) => {
 }
 
 const maybeWriteMonth = (page, blocks, prevMonth, isLeftPage) => {
-  const date = new Date(blocks[0].date)
+  const date = new Date(blocks[blocks.length - 1].date)
   const month = dayjs(date).format('MMM')
 
   if (month !== prevMonth) {
