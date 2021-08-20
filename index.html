@@ -6,7 +6,7 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>One way to visualize a diary.</title>
+    <title>One way to visualize a personal diary.</title>
     <meta name="description" content="" />
 
     <script type="application/json" id="json"></script>
@@ -55,6 +55,34 @@
         fill: #ff3300;
         opacity: 0.1;
       }
+
+      #popup {
+        padding: 8px 12px;
+        font-size: 10pt;
+        line-height: 20px;
+        background-color: #ffffff;
+        border-radius: 10px;
+        position: absolute;
+        border: 1px solid #545454;
+        display: none;
+      }
+
+      #popup * {
+        white-space: nowrap;
+      }
+
+      #popup::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        transform: rotate(45deg);
+        background-color: white;
+        position: absolute;
+        top: 11px;
+        left: -7px;
+        border-left: 1px solid #545454;
+        border-bottom: 1px solid #545454;
+      }
     </style>
   </head>
 
@@ -62,7 +90,12 @@
     <div class="main">
 
       <div id="chart">
-        <div id="title">One way to visualize a diary.</div>
+        <div id="title">One way to visualize a personal diary.</div>
+      </div>
+
+      <div id="popup">
+        <div id="dates"></div>
+        <div id="continuation"></div>
       </div>
     </div>
   </body>

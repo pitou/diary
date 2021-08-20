@@ -1,4 +1,4 @@
-# My diary 2020/2021
+# One way to visualize a personal diary.
 
 ### Setup
 
