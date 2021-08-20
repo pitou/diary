@@ -1,46 +1,32 @@
 import { parse } from 'papaparse'
-import * as d3 from 'd3'
-import { random, range } from 'lodash-es'
+import { range } from 'lodash-es'
 import dayjs from 'dayjs'
 
-import { getRoundedRectPath, getContinuationLine } from './pages.utils'
-
-const PAPER_PAGE_W = 14
-const PAPER_PAGE_H = 20.5
-
-const PAGE_BORDER_MAX_RADIUS = 5
-
-const pageWidth = 40
-const pageHeight = (pageWidth * PAPER_PAGE_H) / PAPER_PAGE_W
-const pageHeightPlusGap = pageHeight + 40
-
-const pageScale = d3.scaleLinear().domain([0, PAPER_PAGE_H]).range([0, pageHeight])
-
-const blockWidth = pageWidth
-
-const cols = 8
-
-const svgWidth = 910
-
-const GAP = 6
-
-const formatDatesForPopup = (dates) => {
-  const d0 = dayjs(dates[0])
-  const d1 = dayjs(dates[1])
-  if (dates.length === 1) {
-    return d0.format('MMM D, YYYY')
-  }
-  if (dayjs(dates[0]).isSame(dates[1], 'month')) {
-    return `${d0.format('MMM D')} to ${d1.format('D, YYYY')}`
-  }
-  if (dayjs(dates[0]).isSame(dates[1], 'year')) {
-    return `${d0.format('MMM D')} to ${d1.format('MMM D, YYYY')}`
-  }
-  return `${d0.format('MMM D, YYYY')} to ${d1.format('MMM D, YYYY')}`
-}
+import { getRoundedRectPath, getContinuationLine, getContinuation } from './utils/pages.utils'
+import {
+  COLS,
+  PAGE_PADDING_TOP,
+  PAGE_BORDER_MAX_RADIUS,
+  BLOCKS_GAP,
+  MISSING_PAGES_BLOCK_HEIGHT,
+  PAGES_GAP,
+} from './constants'
+import {
+  addSvg,
+  addContainer,
+  addPage,
+  drawLine,
+  writeMonth,
+  writePageNum,
+  getPageScale,
+  drawContinuationLine,
+} from './utils/d3.utils'
+import { formatDatesForPopup } from './utils/dates.utils'
+import { getPagesData } from './utils/data.utils'
 
 const drawPageBlock = (page, isLeftPage, actualBlocksCount) => {
   return (blockHeight, blockY, blockIndex, dates, continuation) => {
+    const blockX = 0
     const radius =
       blockHeight > 0 ? Math.min(blockHeight, PAGE_BORDER_MAX_RADIUS) : PAGE_BORDER_MAX_RADIUS
 
@@ -53,7 +39,13 @@ const drawPageBlock = (page, isLeftPage, actualBlocksCount) => {
       roundedCornersType = isLeftPage ? 'bl' : 'br'
     }
 
-    const blockX = 0
+    const rectPath = getRoundedRectPath(
+      roundedCornersType,
+      blockX,
+      blockY,
+      blockHeight || MISSING_PAGES_BLOCK_HEIGHT,
+      radius
+    )
 
     page
       .append('path')
@@ -67,49 +59,21 @@ const drawPageBlock = (page, isLeftPage, actualBlocksCount) => {
           both: 'Continues from/on adjacent pages.',
         }[continuation]
       )
-      .attr(
-        'd',
-        getRoundedRectPath(
+      .attr('d', rectPath)
+
+    if (continuation) {
+      drawContinuationLine(
+        page,
+        getContinuationLine(continuation, {
           roundedCornersType,
           blockX,
           blockY,
-          blockWidth,
-          blockHeight || GAP,
-          radius
-        )
+          blockHeight,
+          radius,
+        })
       )
-
-    if (continuation) {
-      const d = getContinuationLine(continuation, {
-        roundedCornersType,
-        blockX,
-        blockY,
-        blockWidth,
-        blockHeight,
-        radius,
-      })
-      page
-        .append('path')
-        .attr('d', d)
-        .attr('stroke', '#ffffff')
-        .attr('opacity', '1')
-        .attr('stroke-width', 1.5) // bigger than normal lines, to cover them completely
-        .attr('stroke-dasharray', '0 3 3')
     }
   }
-}
-
-const drawLine = (page, y) => {
-  const line = page.append('g').attr('transform', `translate(3, ${y})`)
-
-  line
-    .append('line')
-    .attr('x1', 0)
-    .attr('y1', 0)
-    .attr('x2', blockWidth - random(6, 16))
-    .attr('y2', 0)
-    .attr('stroke', '#595959')
-    .attr('stroke-width', 0.5)
 }
 
 const drawLines = (page, height, blockY) => {
@@ -117,7 +81,7 @@ const drawLines = (page, height, blockY) => {
   const t = h / 2
   let linesY = height >= 6 ? [h] : []
   if (t >= 4) {
-    // Upper limits of range are increased by 1 step unit because they're exluded from the array
+    // Upper limits of range are increased by 1 step unit because they're excluded from the array
     if (t - t / 2 < 4) {
       linesY = range(t, h + t + t, t)
     } else {
@@ -128,18 +92,6 @@ const drawLines = (page, height, blockY) => {
   linesY.forEach((y) => {
     drawLine(page, blockY + y)
   })
-}
-
-const writeMonth = (page, date, year, isLeftPage) => {
-  page
-    .append('text')
-    .attr('x', isLeftPage ? 4 : 1)
-    .attr('y', 0)
-    .attr('fill', '#565656')
-    .attr('font-family', 'Helvetica')
-    .attr('font-size', 6)
-    .attr('font-weight', 'bold')
-    .text(`${date} ${year}`)
 }
 
 const maybeWriteMonth = (page, blocks, prevMonth, isLeftPage) => {
@@ -153,98 +105,41 @@ const maybeWriteMonth = (page, blocks, prevMonth, isLeftPage) => {
   return month
 }
 
-const writePageNum = (page, pageNum) => {
-  page
-    .append('text')
-    .attr('x', pageNum % 2 === 1 ? pageWidth - 9 + (pageNum < 10 ? 3 : 0) : 2)
-    .attr('y', pageHeight + 12)
-    .attr('fill', '#565656')
-    .attr('font-family', 'Helvetica')
-    .attr('font-size', 6)
-    .text(pageNum)
-}
-
-const getContinuation = (prevPageLastDate, nextPageFirstDate) => (date) => {
-  if (date === prevPageLastDate) {
-    return date === nextPageFirstDate ? 'both' : 'prev'
-  }
-  return date === nextPageFirstDate ? 'next' : ''
-}
-
-const getAdjacentPagesDates = (pagesData, pageIndex) => {
-  const prevPage = pagesData[pageIndex - 1]
-  const prevPageLastBlock = prevPage && prevPage[prevPage.length - 1]
-  const { date: prevPageLastDate } = prevPageLastBlock || {}
-
-  const nextPage = pagesData[pageIndex + 1]
-  const nextPageFirstBlock = nextPage && nextPage[0]
-  const { date: nextPageFirstDate } = nextPageFirstBlock || {}
-
-  return { prevPageLastDate, nextPageFirstDate }
-}
-
 const showPages = ({ data }) => {
-  const pagesData = Object.values(data).reduce((acc, dd, dayIndex) => {
-    Object.entries(dd).forEach(([key, val]) => {
-      if (/\d{4}\/\d{2}\/\d{2}/.test(key) && val !== null) {
-        if (!acc[dayIndex]) {
-          acc[dayIndex] = []
-        }
-        acc[dayIndex].push({ date: key, val, dayIndex })
-      }
-    })
-    return acc
-  }, {})
+  const pagesData = getPagesData(data)
+  const container = addContainer(addSvg(pagesData))
 
-  const svgHeight = (Object.values(pagesData).length / cols) * pageHeightPlusGap * 2.05
-
-  const svg = d3.select('#chart').append('svg').attr('width', svgWidth).attr('height', svgHeight)
-
-  svg
-    .append('rect')
-    .attr('x', 0)
-    .attr('y', 10)
-    .attr('width', svgWidth)
-    .attr('height', svgHeight)
-    .attr('fill', '#ffffff')
-
-  const group = svg.append('g').attr('transform', `translate(50 50) scale(2)`)
+  const pageScale = getPageScale()
 
   let prevMonth = ''
 
   Object.values(pagesData).forEach((blocks, pageIndex) => {
     const isLeftPage = pageIndex % 2 === 0
 
-    const blockX = (pageIndex % cols) * 50 + ((pageIndex % cols) % 2 === 0 ? 10 : GAP)
-    let blockY = 0
+    const xCoord = pageIndex % COLS
+    const blockX = xCoord * 50 + (xCoord % 2 === 0 ? 10 : PAGES_GAP)
+
+    let blockY = PAGE_PADDING_TOP
     let actualBlockIndex = 0 // index for blocks with val > 0
     let blockFirstEmptyDate = ''
 
-    const page = group
-      .append('g')
-      .attr('transform', `translate(${blockX} ${pageHeightPlusGap * Math.floor(pageIndex / cols)})`)
+    const page = addPage(container, blockX, pageIndex)
 
-    const blocksUpdated = blocks.map((b) => ({
-      ...b,
-      height: b.val > 0 ? pageScale(b.val) - GAP / 2 : 0,
-    }))
-    const actualBlocks = blocksUpdated.filter((b) => b.height > 0)
+    const actualBlocksCount = blocks.filter((b) => b.val > 0).length // remove empty days
+    const _drawPageBlock = drawPageBlock(page, isLeftPage, actualBlocksCount)
 
-    const { prevPageLastDate, nextPageFirstDate } = getAdjacentPagesDates(pagesData, pageIndex)
+    const _getContinuation = getContinuation(pagesData, pageIndex)
 
-    const _drawPageBlock = drawPageBlock(page, isLeftPage, actualBlocks.length)
-    const _getContinuation = getContinuation(prevPageLastDate, nextPageFirstDate)
-
-    blocksUpdated.forEach(({ height, date }, blockIndex) => {
-      const { val: prevVal } = blockIndex > 0 ? blocksUpdated[blockIndex - 1] : {}
-      blockY += blockIndex > 0 ? pageScale(prevVal) : GAP
+    blocks.forEach(({ val, date }) => {
+      const height = val > 0 ? pageScale(val) - BLOCKS_GAP : 0
 
       drawLines(page, height, blockY)
 
       // mouseover event works better if the container is added after the lines
-      const continuation = _getContinuation(date)
       const dates = blockFirstEmptyDate ? [blockFirstEmptyDate, date] : [date]
-      _drawPageBlock(height, blockY, actualBlockIndex, dates, continuation)
+      _drawPageBlock(height, blockY, actualBlockIndex, dates, _getContinuation(date))
+
+      blockY += pageScale(val)
 
       if (height > 0) {
         actualBlockIndex++

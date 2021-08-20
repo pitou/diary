@@ -1,4 +1,28 @@
-export const getRoundedRectPath = (roundedCornersType, x, y, width, height, radius) => {
+import { BLOCK_WIDTH } from '../constants'
+
+export const getContinuation = (pagesData, pageIndex) => (date) => {
+  const { prevPageLastDate, nextPageFirstDate } = getAdjacentPagesDates(pagesData, pageIndex)
+
+  if (date === prevPageLastDate) {
+    return date === nextPageFirstDate ? 'both' : 'prev'
+  }
+  return date === nextPageFirstDate ? 'next' : ''
+}
+
+export const getAdjacentPagesDates = (pagesData, pageIndex) => {
+  const prevPage = pagesData[pageIndex - 1]
+  const prevPageLastBlock = prevPage && prevPage[prevPage.length - 1]
+  const { date: prevPageLastDate } = prevPageLastBlock || {}
+
+  const nextPage = pagesData[pageIndex + 1]
+  const nextPageFirstBlock = nextPage && nextPage[0]
+  const { date: nextPageFirstDate } = nextPageFirstBlock || {}
+
+  return { prevPageLastDate, nextPageFirstDate }
+}
+
+export const getRoundedRectPath = (roundedCornersType, x, y, height, radius) => {
+  const width = BLOCK_WIDTH
   const arcParams = `${radius},${radius} 0 0 1`
 
   switch (roundedCornersType) {
@@ -73,7 +97,7 @@ export const getRoundedRectPath = (roundedCornersType, x, y, width, height, radi
 }
 
 export const getContinuationLine = (continuation, params) => {
-  const { roundedCornersType, blockX, blockY, blockWidth, blockHeight, radius } = params
+  const { roundedCornersType, blockX, blockY, blockHeight, radius } = params
 
   switch (roundedCornersType) {
     case 'l':
@@ -112,20 +136,20 @@ export const getContinuationLine = (continuation, params) => {
 
     case 'tl':
       return continuation === 'prev'
-        ? `M ${blockX + radius},${blockY} h ${blockWidth - radius}`
+        ? `M ${blockX + radius},${blockY} h ${BLOCK_WIDTH - radius}`
         : ''
 
     case 'tr':
-      return continuation === 'prev' ? `M ${blockX},${blockY} h ${blockWidth - radius}` : ''
+      return continuation === 'prev' ? `M ${blockX},${blockY} h ${BLOCK_WIDTH - radius}` : ''
 
     case 'bl':
       return continuation === 'next'
-        ? `M ${blockX + radius},${blockY + blockHeight} h ${blockWidth - radius}`
+        ? `M ${blockX + radius},${blockY + blockHeight} h ${BLOCK_WIDTH - radius}`
         : ''
 
     case 'br':
       return continuation === 'next'
-        ? `M ${blockX},${blockY + blockHeight} h ${blockWidth - radius}`
+        ? `M ${blockX},${blockY + blockHeight} h ${BLOCK_WIDTH - radius}`
         : ''
   }
 }
