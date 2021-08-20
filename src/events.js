@@ -8,6 +8,11 @@ const interval = setInterval(() => {
 
   blocks.forEach((block) => {
     block.addEventListener('mouseover', (e) => {
+      // Temporarily disable on mobile
+      if (window.innerWidth <= 700) {
+        return
+      }
+
       const block = e.target
 
       const { right, top, height } = block.getBoundingClientRect()

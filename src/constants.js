@@ -1,7 +1,3 @@
-export const COLS = 8
-
-export const SVG_WIDTH = 910
-
 export const PAPER_PAGE_W = 14
 export const PAPER_PAGE_H = 20.5
 
@@ -16,3 +12,10 @@ export const PAGES_GAP = 6
 export const BLOCK_WIDTH = PAGE_WIDTH
 export const BLOCKS_GAP = 3
 export const MISSING_PAGES_BLOCK_HEIGHT = 6
+
+export const HORIZONTAL_PADDING = 5
+export const SVG_MARGIN_TOP = 50
+
+export const SVG_SCALE_MOBILE = 2.5
+export const SVG_SCALE_TABLET = 2.2
+export const SVG_SCALE_DESKTOP = 2

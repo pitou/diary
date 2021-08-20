@@ -1,20 +1,17 @@
 import { parse } from 'papaparse'
-import { range } from 'lodash-es'
+import { range, chunk } from 'lodash-es'
 import dayjs from 'dayjs'
 
 import { getRoundedRectPath, getContinuationLine, getContinuation } from './utils/pages.utils'
 import {
-  COLS,
   PAGE_PADDING_TOP,
   PAGE_BORDER_MAX_RADIUS,
   BLOCKS_GAP,
   MISSING_PAGES_BLOCK_HEIGHT,
-  PAGES_GAP,
 } from './constants'
 import {
-  addSvg,
-  addContainer,
   addPage,
+  addSvg,
   drawLine,
   writeMonth,
   writePageNum,
@@ -60,6 +57,7 @@ const drawPageBlock = (page, isLeftPage, actualBlocksCount) => {
         }[continuation]
       )
       .attr('d', rectPath)
+      .attr('stroke', 1)
 
     if (continuation) {
       drawContinuationLine(
@@ -107,23 +105,19 @@ const maybeWriteMonth = (page, blocks, prevMonth, isLeftPage) => {
 
 const showPages = ({ data }) => {
   const pagesData = getPagesData(data)
-  const container = addContainer(addSvg(pagesData))
 
   const pageScale = getPageScale()
 
   let prevMonth = ''
 
-  Object.values(pagesData).forEach((blocks, pageIndex) => {
+  const drawPage = (div, blocks, pageIndex) => {
     const isLeftPage = pageIndex % 2 === 0
-
-    const xCoord = pageIndex % COLS
-    const blockX = xCoord * 50 + (xCoord % 2 === 0 ? 10 : PAGES_GAP)
 
     let blockY = PAGE_PADDING_TOP
     let actualBlockIndex = 0 // index for blocks with val > 0
     let blockFirstEmptyDate = ''
 
-    const page = addPage(container, blockX, pageIndex)
+    const page = addPage(div, isLeftPage)
 
     const actualBlocksCount = blocks.filter((b) => b.val > 0).length // remove empty days
     const _drawPageBlock = drawPageBlock(page, isLeftPage, actualBlocksCount)
@@ -152,6 +146,15 @@ const showPages = ({ data }) => {
     prevMonth = maybeWriteMonth(page, blocks, prevMonth, isLeftPage)
 
     writePageNum(page, pageIndex + 1)
+  }
+
+  // Create one SVG for each couple of pages
+  chunk(Object.values(pagesData), 2).forEach((chunk, i) => {
+    const svg = addSvg()
+
+    chunk.forEach((blocks, j) => {
+      drawPage(svg, blocks, i * 2 + j)
+    })
   })
 }
 

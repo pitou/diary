@@ -3,41 +3,60 @@ import { random } from 'lodash-es'
 
 import {
   BLOCK_WIDTH,
-  COLS,
+  HORIZONTAL_PADDING,
   PAGE_HEIGHT,
   PAGE_HEIGHT_PLUS_GAP,
   PAGE_WIDTH,
+  PAGES_GAP,
   PAPER_PAGE_H,
-  SVG_WIDTH,
+  SVG_MARGIN_TOP,
+  SVG_SCALE_DESKTOP,
+  SVG_SCALE_MOBILE,
+  SVG_SCALE_TABLET,
 } from '../constants'
 
-export const addSvg = (pagesData) => {
-  const svgHeight = (Object.values(pagesData).length / COLS) * PAGE_HEIGHT_PLUS_GAP * 2.05
+const isMobile = () => window.innerWidth <= 700
+const isTablet = () => !isMobile() && window.innerWidth <= 900
 
-  const svg = d3.select('#chart').append('svg').attr('width', SVG_WIDTH).attr('height', svgHeight)
-
-  svg
-    .append('rect')
-    .attr('x', 0)
-    .attr('y', 10)
-    .attr('width', SVG_WIDTH)
-    .attr('height', svgHeight)
-    .attr('fill', '#ffffff')
-
-  return svg
+const getNewScale = () => {
+  if (isMobile()) {
+    return SVG_SCALE_MOBILE
+  }
+  if (isTablet()) {
+    return SVG_SCALE_TABLET
+  }
+  return SVG_SCALE_DESKTOP
 }
 
-export const addContainer = (svg) => {
-  return svg.append('g').attr('transform', `translate(50 80) scale(2)`)
+let currentScale = getNewScale()
+
+window.addEventListener('resize', () => {
+  const newScale = getNewScale()
+
+  if (newScale !== currentScale) {
+    d3.selectAll('#pages svg').attr('transform', `scale(${newScale})`)
+  }
+})
+
+export const addSvg = () => {
+  return d3
+    .select('#pages')
+    .append('div')
+    .append('svg')
+    .style('width', `${PAGE_WIDTH * 2 + PAGES_GAP + HORIZONTAL_PADDING * 2}px`)
+    .style('height', `${PAGE_HEIGHT_PLUS_GAP + SVG_MARGIN_TOP}px`)
+    .attr('transform', `scale(${currentScale})`)
 }
 
-export const addPage = (container, blockX, pageIndex) => {
+export const addPage = (container, isLeftPage) => {
+  const x = HORIZONTAL_PADDING + (isLeftPage ? 0 : PAGE_WIDTH + PAGES_GAP)
+  const y = SVG_MARGIN_TOP
+
   return container
     .append('g')
-    .attr(
-      'transform',
-      `translate(${blockX} ${PAGE_HEIGHT_PLUS_GAP * Math.floor(pageIndex / COLS)})`
-    )
+    .attr('width', PAGE_WIDTH)
+    .attr('height', PAGE_HEIGHT)
+    .attr('transform', `translate(${x} ${y})`)
 }
 
 export const getPageScale = () => {
