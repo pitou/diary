@@ -16,7 +16,7 @@ import {
 } from '../constants'
 
 const isMobile = () => window.innerWidth <= 700
-const isTablet = () => !isMobile() && window.innerWidth <= 900
+const isTablet = () => !isMobile() && window.innerWidth <= 1180
 
 const getNewScale = () => {
   if (isMobile()) {
@@ -34,6 +34,7 @@ window.addEventListener('resize', () => {
   const newScale = getNewScale()
 
   if (newScale !== currentScale) {
+    currentScale = newScale
     d3.selectAll('#pages svg').attr('transform', `scale(${newScale})`)
   }
 })
