@@ -28,4 +28,4 @@ Some examples:
 
 * Implement an alternative view in which the **number of rows** in a block is taken in consideration instead of its height
 * Rewrite code using Typescript
-
+* Write tests
