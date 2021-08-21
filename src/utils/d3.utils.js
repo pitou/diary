@@ -14,9 +14,7 @@ import {
   SVG_SCALE_MOBILE,
   SVG_SCALE_TABLET,
 } from '../constants'
-
-const isMobile = () => window.innerWidth <= 700
-const isTablet = () => !isMobile() && window.innerWidth <= 1180
+import { isMobile, isTablet } from './window.utils'
 
 const getNewScale = () => {
   if (isMobile()) {
@@ -55,6 +53,7 @@ export const addPage = (container, isLeftPage) => {
 
   return container
     .append('g')
+    .attr('class', `page ${isLeftPage ? 'left' : 'right'}`)
     .attr('width', PAGE_WIDTH)
     .attr('height', PAGE_HEIGHT)
     .attr('transform', `translate(${x} ${y})`)
