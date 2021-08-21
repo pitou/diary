@@ -16,6 +16,6 @@ export const MISSING_PAGES_BLOCK_HEIGHT = 6
 export const HORIZONTAL_PADDING = 5
 export const SVG_MARGIN_TOP = 50
 
-export const SVG_SCALE_MOBILE = 2.5
+export const SVG_SCALE_MOBILE = 2.2
 export const SVG_SCALE_TABLET = 2.2
 export const SVG_SCALE_DESKTOP = 2

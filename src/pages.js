@@ -159,7 +159,7 @@ const showPages = ({ data }) => {
 }
 
 export const processData = async () => {
-  parse('http://localhost:8000/public/data.csv', {
+  parse('/public/diary/data.csv', {
     header: true,
     download: true,
     dynamicTyping: true,

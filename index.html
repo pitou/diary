@@ -13,7 +13,7 @@
 
     <script src="dist/bundle.js"></script>
 
-    <link rel="stylesheet" href="public/style.css" />
+    <link rel="stylesheet" href="public/diary/style.css" />
   </head>
 
   <body onload="bundle.processData()">
@@ -28,20 +28,37 @@
         <div class="introText">
           On <strong>August 10, 2021</strong>, I reached the last page of my diary, which I started writing on the <strong>first day of 2020</strong>.
           <br />
-          I thought it would be interesting to try to <strong>represent the structure of the pages</strong> using simple design choices.
-          <br />
-          The rules are:
-          <ul>
-            <li>each section inside a page represents a single <strong>writing session</strong>, on a certain date</li>
-            <li>the height of each section is proportional to the actual space that it occupies on the original page</li>
-            <li>if a writing session spans over multiple pages, the upper and/or lower side of a single section will be a dashed line, to express continuation</li>
-            <li>if I skipped writing for one or more days, at the top of the section you will see a colored block; the darker the color, the more days were skipped</li>
-          </ul>
-          <br />
+          I thought it would be interesting to try to <strong>represent the structure of its pages</strong> using simple design choices.
+        </div>
+
+        <div class="introText flex">
+          <div>
+            The rules are:
+            <ul>
+              <li>each <strong>block</strong> inside a page represents a single <strong>writing session</strong>, on a certain date</li>
+              <li>the <strong>height</strong> of each block is proportional to the actual space that it occupies on the original page</li>
+              <li>if a writing session spans over <strong>multiple pages</strong>, the upper and/or lower side of its related block will be a <strong>dashed line</strong>, to express continuation</li>
+              <li>if I skipped writing for one or more days, at the top of the block you will see a <strong>colored header</strong>; the darker the color, the more days were skipped</li>
+            </ul>
+          </div>
+          <div>
+            Here's a two-page example:
+            <div class="imageContainer">
+              <img src="public/diary/example.png" />
+            </div>
+          </div>
+        </div>
+
+        <div class="introText">
           I'm thinking about an alternative view in which the <strong>number of rows</strong> in a section is taken in consideration instead of its height;
-          sooner or later I will implement it. Being a quick experiment made in a few days, honestly I do not expect this project to grow further than that, but who knows.
+          sooner or later I will implement it.
+          Being a quick experiment made in a few days, honestly I do not expect this project to grow further than that, but who knows.
           <br />
           Anyway, thank you for visiting! See you in the future for the analysis of volume two :)
+        </div>
+
+        <div class="introText">
+          P.S. if you're on mobile, please also try the desktop version of this page!
         </div>
 
         <div class="introTitle">
@@ -58,6 +75,11 @@
 
         <div class="introTitle">
           The pages
+        </div>
+
+        <div class="introText">
+          Each page is rendered dynamically using <a href="https://d3js.org/" target="_blank" rel="noopener noreferrer">D3.js</a>,
+          and its content reflects some data present in an external CSV file.
         </div>
       </div>
 
