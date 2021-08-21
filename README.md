@@ -1,5 +1,7 @@
 # One way to visualize a personal diary.
 
+[Online version](https://pitou.it/diary)
+
 ### Quick start
 
 Just install the dependencies and launch the project:
