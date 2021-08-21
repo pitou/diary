@@ -13,152 +13,53 @@
 
     <script src="dist/bundle.js"></script>
 
-    <style>
-      html, body {
-        height: 100%;
-      }
-
-      body {
-        background-color: #f1f1f1;
-        padding: 50px;
-        line-height: 50%;
-        font-family: Helvetica sans-serif;
-        display: flex;
-        justify-content: center;
-      }
-
-      .main {
-        width: 1040px;
-        min-height: 100%;
-        display: flex;
-        flex-direction: column;
-        background-color: #ffffff;
-      }
-
-      #title {
-        padding-top: 60px;
-        padding-bottom: 75px;
-        font-size: 44px;
-        line-height: 60px;
-        white-space: nowrap;
-        color: #565656;
-      }
-
-      #title > div {
-        display: inline;
-      }
-
-      #pages {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        background-color: #ffffff;
-      }
-
-      #pages > div {
-        width: 25%;
-        height: 200px;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-      }
-
-      #title, #pages {
-        padding-left: 65px;
-        padding-right: 65px;
-      }
-
-      @media screen and (max-width: 1180px) {
-        #pages > div {
-          width: 33%;
-        }
-      }
-
-      @media screen and (max-width: 850px) {
-        #title {
-          display: flex;
-          flex-direction: column;
-          white-space: normal;
-          padding-top: 50px;
-          padding-bottom: 40px;
-          text-align: center;
-        }
-
-        #pages > div {
-          width: 50%;
-        }
-      }
-
-      @media screen and (max-width: 700px) {
-        body {
-          padding: 0;
-        }
-
-        #title {
-          padding-left: 30px;
-          padding-right: 30px;
-          padding-bottom: 90px;
-          font-size: 34px;
-          line-height: 50px;
-          text-align: center;
-        }
-
-        #pages {
-          padding: 0;
-        }
-
-        #pages > div {
-          width: 100%;
-          height: 250px;
-        }
-      }
-
-      .pageBlock {
-        stroke: #b4b4b4;
-        fill: transparent;
-        opacity: 1;
-      }
-
-      .missingPages {
-        stroke: transparent;
-        fill: #ff3300;
-        opacity: 0.1;
-      }
-
-      #popup {
-        padding: 8px 12px;
-        font-size: 10pt;
-        line-height: 20px;
-        background-color: #ffffff;
-        border-radius: 10px;
-        position: absolute;
-        border: 1px solid #545454;
-        display: none;
-      }
-
-      #popup * {
-        white-space: nowrap;
-      }
-
-      #popup::before {
-        content: "";
-        width: 10px;
-        height: 10px;
-        transform: rotate(45deg);
-        background-color: white;
-        position: absolute;
-        top: 11px;
-        left: -7px;
-        border-left: 1px solid #545454;
-        border-bottom: 1px solid #545454;
-      }
-    </style>
+    <link rel="stylesheet" href="public/style.css" />
   </head>
 
   <body onload="bundle.processData()">
     <div class="main">
       <div id="title"><div>One way to visualize</div> <div>a personal diary.</div></div>
+
+      <div class="intro">
+        <div class="introTitle">
+          Intro
+        </div>
+
+        <div class="introText">
+          On <strong>August 10, 2021</strong>, I reached the last page of my diary, which I started writing on the <strong>first day of 2020</strong>.
+          <br />
+          I thought it would be interesting to try to <strong>represent the structure of the pages</strong> using simple design choices.
+          <br />
+          The rules are:
+          <ul>
+            <li>each section inside a page represents a single <strong>writing session</strong>, on a certain date</li>
+            <li>the height of each section is proportional to the actual space that it occupies on the original page</li>
+            <li>if a writing session spans over multiple pages, the upper and/or lower side of a single section will be a dashed line, to express continuation</li>
+            <li>if I skipped writing for one or more days, at the top of the section you will see a colored block; the darker the color, the more days were skipped</li>
+          </ul>
+          <br />
+          I'm thinking about an alternative view in which the <strong>number of rows</strong> in a section is taken in consideration instead of its height;
+          sooner or later I will implement it. Being a quick experiment made in a few days, honestly I do not expect this project to grow further than that, but who knows.
+          <br />
+          Anyway, thank you for visiting! See you in the future for the analysis of volume two :)
+        </div>
+
+        <div class="introTitle">
+          Links
+        </div>
+
+        <div class="introText">
+          Do you want to visualize your own diary? Do you have ideas to improve the design or the implementation?
+          <br />
+          You can see the project code on this GitHub page: <a href="https://github.com/pitou/diary">pitou/diary</a>.
+          <br />
+          Any suggestion or question related to the project? If you want you can contact me <a href="https://forms.gle/nvbdJRechHoxPjX77">here</a>... and please be kind :)
+        </div>
+
+        <div class="introTitle">
+          The pages
+        </div>
+      </div>
 
       <div id="pages"></div>
 

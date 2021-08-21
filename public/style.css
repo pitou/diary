@@ -1,0 +1,180 @@
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: #f1f1f1;
+  padding: 50px;
+  line-height: 50%;
+  font-family: Helvetica sans-serif;
+  display: flex;
+  justify-content: center;
+}
+
+ul {
+  margin: 0;
+}
+
+.main {
+  width: 1040px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+#title {
+  padding-top: 60px;
+  padding-bottom: 30px;
+  font-size: 44px;
+  line-height: 60px;
+  white-space: nowrap;
+  color: #565656;
+}
+
+#title > div {
+  display: inline;
+}
+
+.intro {
+  padding-top: 20px;
+}
+
+.intro > div {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.introTitle {
+  font-size: 22px;
+}
+
+.introText {
+  margin-bottom: 10px;
+  font-size: 15px;
+  line-height: 24px;
+}
+
+#title, .intro {
+  padding-left: 85px;
+  padding-right: 85px;
+}
+
+#pages {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  background-color: #ffffff;
+  padding: 30px 65px 60px;
+}
+
+#pages > div {
+  width: 25%;
+  height: 200px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 1180px) {
+  #pages > div {
+    width: 33%;
+  }
+}
+
+@media screen and (max-width: 850px) {
+  #title {
+    display: flex;
+    flex-direction: column;
+    white-space: normal;
+    padding: 50px 0 40px;
+    text-align: center;
+  }
+
+  #pages > div {
+    width: 50%;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  body {
+    background-color: #ffffff;
+    padding: 0;
+  }
+
+  #title {
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-bottom: 50px;
+    font-size: 34px;
+    line-height: 50px;
+  }
+
+  .intro {
+    padding-left: 35px;
+    padding-right: 35px;
+  }
+
+  #pages {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  #pages > div {
+    width: 100%;
+    height: 250px;
+  }
+}
+
+.pageBlock {
+  stroke: #b4b4b4;
+  fill: transparent;
+  opacity: 1;
+}
+
+.missingPages {
+  stroke: transparent;
+  fill: #ff3300;
+  opacity: 0.1;
+}
+
+#popup {
+  padding: 8px 22px;
+  font-size: 10pt;
+  line-height: 20px;
+  border-radius: 10px;
+  display: none;
+}
+
+#popup * {
+  white-space: nowrap;
+}
+
+#popup,
+#popup::before {
+  position: absolute;
+  border: 1px solid #545454;
+  background-color: #d7edff;
+}
+
+#popup::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  top: 11px;
+  transform: rotate(45deg);
+}
+
+#popup.left::before {
+  left: -7px;
+  border-top: 0;
+  border-right: 0;
+}
+
+#popup.right::before {
+  right: -7px;
+  border-left: 0;
+  border-bottom: 0;
+}
