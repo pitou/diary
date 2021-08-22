@@ -72,7 +72,7 @@ ul {
 .introText.flex div:nth-child(2) {
   display: flex;
   flex-direction: column;
-  padding-left: 30px;
+  padding-left: 35px;
 }
 
 .introText .imageContainer {
