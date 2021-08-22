@@ -1,24 +1,37 @@
 import { BLOCK_WIDTH } from '../constants'
 
 export const getContinuation = (pagesData, pageIndex) => (date) => {
-  const { prevPageLastDate, nextPageFirstDate } = getAdjacentPagesDates(pagesData, pageIndex)
+  const { prevPageFirstDateOfLastBlock, nextPageFirstDate } = getAdjacentPagesDates(
+    pagesData,
+    pageIndex
+  )
 
-  if (date === prevPageLastDate) {
+  if (date === prevPageFirstDateOfLastBlock) {
     return date === nextPageFirstDate ? 'both' : 'prev'
   }
   return date === nextPageFirstDate ? 'next' : ''
 }
 
+const findBlockWithFirstEmptyVal = (page) => {
+  for (let i = page.length - 2; i >= 0; i--) {
+    if (page[i].val !== 0) {
+      return page[i + 1]
+    }
+  }
+  return page[0]
+}
+
 export const getAdjacentPagesDates = (pagesData, pageIndex) => {
   const prevPage = pagesData[pageIndex - 1]
-  const prevPageLastBlock = prevPage && prevPage[prevPage.length - 1]
-  const { date: prevPageLastDate } = prevPageLastBlock || {}
+  const prevPageLastBlock = prevPage && findBlockWithFirstEmptyVal(prevPage)
+
+  const { date: prevPageFirstDateOfLastBlock } = prevPageLastBlock || {}
 
   const nextPage = pagesData[pageIndex + 1]
   const nextPageFirstBlock = nextPage && nextPage[0]
   const { date: nextPageFirstDate } = nextPageFirstBlock || {}
 
-  return { prevPageLastDate, nextPageFirstDate }
+  return { prevPageFirstDateOfLastBlock, nextPageFirstDate }
 }
 
 export const getRoundedRectPath = (roundedCornersType, x, y, height, radius) => {

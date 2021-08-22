@@ -131,7 +131,9 @@ const showPages = ({ data }) => {
 
       // mouseover event works better if the container is added after the lines
       const dates = blockFirstEmptyDate ? [blockFirstEmptyDate, date] : [date]
-      _drawPageBlock(height, blockY, actualBlockIndex, dates, _getContinuation(date))
+
+      const continuation = val > 0 ? _getContinuation(blockFirstEmptyDate || date) : null
+      _drawPageBlock(height, blockY, actualBlockIndex, dates, continuation)
 
       blockY += pageScale(val)
 
