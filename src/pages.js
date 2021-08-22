@@ -22,7 +22,7 @@ import { formatDatesForPopup } from './utils/dates.utils'
 import { getPagesData } from './utils/data.utils'
 
 const drawPageBlock = (page, isLeftPage, actualBlocksCount) => {
-  return (blockHeight, blockY, blockIndex, dates, continuation) => {
+  return (blockHeight, blockY, actualBlockIndex, dates, continuation) => {
     const blockX = 0
     const radius =
       blockHeight > 0 ? Math.min(blockHeight, PAGE_BORDER_MAX_RADIUS) : PAGE_BORDER_MAX_RADIUS
@@ -30,9 +30,9 @@ const drawPageBlock = (page, isLeftPage, actualBlocksCount) => {
     let roundedCornersType
     if (actualBlocksCount === 1 && blockHeight > 0) {
       roundedCornersType = isLeftPage ? 'l' : 'r'
-    } else if (blockIndex === 0) {
+    } else if (actualBlockIndex === 0) {
       roundedCornersType = isLeftPage ? 'tl' : 'tr'
-    } else if (blockIndex === actualBlocksCount - 1 && blockHeight > 0) {
+    } else if (actualBlockIndex === actualBlocksCount - 1 && blockHeight > 0) {
       roundedCornersType = isLeftPage ? 'bl' : 'br'
     }
 
@@ -44,11 +44,19 @@ const drawPageBlock = (page, isLeftPage, actualBlocksCount) => {
       radius
     )
 
-    page
-      .append('path')
-      .attr('class', blockHeight === 0 ? 'missingPages' : 'pageBlock')
-      .attr('data-dates', formatDatesForPopup(dates))
-      .attr(
+    // Update page class
+    if (actualBlockIndex === 0 && ['prev', 'both'].includes(continuation)) {
+      page.classed('withPrevContinuation', true)
+    }
+
+    // Append block
+    const block = page.append('path').attr('d', rectPath)
+
+    const isMissingDays = blockHeight === 0
+    if (isMissingDays) {
+      block.attr('class', `missingDays ${actualBlockIndex === 0 ? `missingDays-0` : ''}`)
+    } else {
+      block.attr('class', 'pageBlock').attr('data-dates', formatDatesForPopup(dates)).attr(
         'data-continuation',
         {
           prev: 'Continues from previous page.',
@@ -56,8 +64,7 @@ const drawPageBlock = (page, isLeftPage, actualBlocksCount) => {
           both: 'Continues from/on adjacent pages.',
         }[continuation]
       )
-      .attr('d', rectPath)
-      .attr('stroke', 1)
+    }
 
     if (continuation) {
       drawContinuationLine(

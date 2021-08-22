@@ -167,16 +167,28 @@ ul {
   }
 }
 
-.pageBlock {
+.page .pageBlock {
   stroke: #b4b4b4;
   fill: transparent;
   opacity: 1;
 }
 
-.missingPages {
+.page .missingDays {
   stroke: transparent;
-  fill: #ff3300;
   opacity: 0.1;
+}
+
+.page:not(.withPrevContinuation) .missingDays-0,
+.page .missingDays:not(.missingDays-0) {
+  fill: #ff3300;
+}
+
+.page.withPrevContinuation .missingDays-0 {
+  fill: transparent;
+}
+
+.page.withPrevContinuation .missingDays-0:first-of-type {
+  fill: #0059ff;
 }
 
 #popup {
