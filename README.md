@@ -1,19 +1,10 @@
 # One way to visualize a personal diary.
 
-[Online version](https://pitou.it/diary)
-
-### Quick start
-
-Just install the dependencies and launch the project:
-
-```
-yarn
-yarn start
-```
-
 ## About the project
 
 I thought it would be interesting to try to represent the **structure of the pages of my latest diary**, using simple design choices.
+
+![alt text](public/diary/example_gh.png)
 
 The rules are:
 
@@ -23,9 +14,18 @@ The rules are:
 * if I skipped writing for one or more days, at the top of the block you will see a <strong><span style="color: #ff8c6b">orangish</span> colored header</strong>; the darker the shade, the more days were skipped
 * if that session spans over multiple pages, the blocks on the following pages will have a unique <strong><span style="color: #548fff">bluish</span> colored header</strong>
 
-Some examples:
+## Links
 
-![alt text](public/diary/example_gh.png)
+[Online version](https://pitou.it/diary)
+
+## Development
+
+Just install the dependencies and launch the project:
+
+```
+yarn
+yarn start
+```
 
 ## Todo
 
